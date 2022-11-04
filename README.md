@@ -105,9 +105,9 @@ This repository already provide a workspace configuration with for vscode.
             "program": "${workspaceFolder}/odoo/odoo-bin",
             "console": "integratedTerminal",
             "args": ["test",
-                "-d=odoo16_database",
+                "-d=<database>",
                 "--config=<odoo.conf>",
-                "--module=module_xyz"
+                "--module=<module>"
             ]
         }
 
