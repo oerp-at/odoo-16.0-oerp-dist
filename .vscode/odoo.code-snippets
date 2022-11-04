@@ -1,0 +1,118 @@
+{   
+    "odoo_sep": {
+        "scope": "xml",
+        "prefix": "osep",
+        "body": [
+            "<separator/>"
+        ],
+        "description": "Odoo Separator"
+    },
+    "odoo_search_group": {
+        "scope": "xml",
+        "prefix": "osgrp",
+        "body": [
+            "<group name=\"group_by\" string=\"Group By\">",
+            "\t<filter name=\"${1}\" string=\"${2}\" context=\"{'group_by': '${3}'}\"/>",
+            "</group>"
+        ],
+        "description": "Odoo Search Group"
+    },
+    "odoo_test": {
+        "scope": "python",
+        "prefix": "otest",
+        "body": [
+            "from odoo import tools",
+            "from odoo.tests.common import TransactionCase",
+            "",
+            "",
+            "class Test${1}(TransactionCase):",
+            "\t''' ${2} '''",
+            "",
+            "\tdef test_${3}(self):",
+            "\t\t${4}"
+        ],
+        "description": "Odoo Test"
+    },
+    "odoo_manifest_paessler": {
+        "prefix": "oman_pae",
+        "body": [            
+            "# pylint: disable=manifest-required-author",
+            "# pylint: disable=license-allowed",
+            "{",
+            "    'name': '${1}',",
+            "    'version': '14.0.1.0.0',",
+            "    'summary': '${2}',",
+            "    'category': '${3}',",
+            "    'author': 'Paessler AG',",
+            "    'maintainer': 'Paessler AG',",
+            "    'website': 'https://www.paessler.com',",
+            "    'license': 'OPL-1',",
+            "    'depends': [",
+            "        'base'",
+            "    ],",
+            "    'data': [",
+            "    ],",
+            "    'demo': [",
+            "    ],",
+            "}"
+        ],
+        "description": "Odoo Manifest Paessler"
+    },
+    "odoo_attribute_invisible": {
+        "prefix": "oattinv",
+        "body": [
+            "attrs=\"{'invisible': [('${1}', '!=', '${2}')]}\""
+        ],
+        "description": "Invisible Attribute"
+    },
+    "odoo_attribute_required": {
+        "prefix": "oattreq",
+        "body": [
+            "attrs=\"{'required': [('${1}', '=', '${2}')]}\""
+        ],
+        "description": "Odoo Required Attribute"
+    },
+    "odoo_server_action": {
+        "prefix": "osact",
+        "body": [
+            "<record model=\"ir.actions.server\" id=\"action_${1}\">",
+            "        <field name=\"name\">${2}</field>",
+            "        <field name=\"model_id\" ref=\"model_${3}\"/>",
+            "        <field name=\"binding_model_id\" ref=\"model_${3}\"/>",
+            "        <field name=\"state\">code</field>",
+            "        <field name=\"code\">",
+            "           ${4}",
+            "        </field>",
+            "</record>"
+        ],
+        "description": "Create Odoo Server Action"
+    },
+    "odoo_auto_action": {
+        "prefix": "oaact",
+        "body": [
+            "<record id=\"${id}_aact\" model=\"base.automation\">",
+            "    <field name=\"name\">${name}</field>",
+            "    <field name=\"model_id\" ref=\"${model}\"/>",
+            "    <field name=\"trigger\">${on_create_or_write}</field>",
+            "    <field name=\"trigger_field_ids\" eval=\"[(4, ref('${model_id}.field_${model_id}__${field_id}'))]\"/>",
+            "    <field name=\"filter_domain\">${domain}</field>",
+            "    <field name=\"state\">${action}</field>    ",
+            "</record>"
+        ],
+        "description": "Automatic Action"
+    },
+    "odoo_data_file": {
+        "prefix": "odatf",
+        "body": [
+            "<?xml version='1.0' encoding='utf-8'?>    ",
+            "<odoo>",
+            "    <data>",
+            "",
+            "        $cursor        ",
+            "",
+            "    </data>",
+            "</odoo>"
+        ],
+        "description": "Odoo Data File"
+    }
+}

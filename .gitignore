@@ -1,0 +1,6 @@
+*.pyc
+__pycache__
+assembly
+.config
+.test
+.venv
