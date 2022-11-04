@@ -17,3 +17,4 @@ from . import tsconfig
 from . import neutralize
 from . import genproxytoken
 from . import db
+from . import config

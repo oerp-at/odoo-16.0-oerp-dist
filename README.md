@@ -11,7 +11,7 @@ For the package management **pipenv** is used. Therefore, all dependencies (also
 
 But some Python packages also have native dependencies, here the packagelist for Ubuntu 20.04:
 
-    apt-get install apt-get install build-essential git virtualenv pipenv poppler-utils bzip2 curl fonts-freefont-ttf fonts-ubuntu fontconfig python3-dev libcairo2-dev libcups2-dev libffi-dev libfontconfig1-dev libfreetype6-dev libssl-dev libldap2-dev libxml2-dev libxslt1-dev libpq-dev libhttp-parser-dev libsasl2-dev libmagickwand-dev
+    apt-get install apt-get install build-essential git virtualenv pipenv poppler-utils bzip2 curl fonts-freefont-ttf fonts-ubuntu fontconfig python3-dev libcairo2-dev libcups2-dev libffi-dev libfontconfig1-dev libfreetype6-dev libssl-dev libldap2-dev libxml2-dev libxslt1-dev libpq-dev libhttp-parser-dev libsasl2-dev libmagickwand-dev libdmtx-dev
 
 
 # Development
