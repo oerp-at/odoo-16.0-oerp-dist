@@ -1,4 +1,4 @@
-# Paessler Odoo 16.0 Distribution
+# Odoo 16.0 Distribution
 
 This is an all-in-one repository with all Odoo modules for development and 
 distribution. It should make fast start easy and simple.
