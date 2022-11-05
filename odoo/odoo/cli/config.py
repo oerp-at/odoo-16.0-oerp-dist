@@ -1,47 +1,46 @@
 # -*- coding: utf-8 -*--
-# © 2007 Martin Reisenhofer <martin@reisenofer.biz>
-# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
+# © 2007 Funkring.net (Martin Reisenhofer <martin.reisenhofer@funkring.net>)
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from genericpath import isdir
-from itertools import count
-import logging
 import argparse
+import configparser
+import fnmatch
+import glob
+import locale
+import logging
 import os
-import sys
 import re
+import shutil
+import sys
 import threading
 import time
 import unittest
-import locale
-import psycopg2
-import configparser
-from tabulate import tabulate
 from datetime import datetime
 from multiprocessing import Pool
 from urllib.parse import urlparse
 
-import odoo
-import glob
-import shutil
-import fnmatch
+import psycopg2
+from genericpath import isdir
+from tabulate import tabulate
 
-from odoo.tools import misc
+import odoo
+import odoo.tests.loader
+from odoo.modules.module import MANIFEST_NAMES
 from odoo.modules.registry import Registry
+from odoo.tests.loader import unwrap_suite
+from odoo.tests.runner import OdooTestResult
+from odoo.tools import misc
 from odoo.tools.config import config
-from odoo.tools.translate import PoFileReader, PoFileWriter, TranslationModuleReader
+from odoo.tools.translate import (PoFileReader, PoFileWriter,
+                                  TranslationModuleReader)
 
 from . import Command
 from .server import main
 
-import odoo.tests.loader
-from odoo.tests.loader import unwrap_suite
-from odoo.tests.runner import OdooTestResult
-from odoo.modules.module import MANIFEST_NAMES
-
-
 _logger = logging.getLogger('config')
 
 ADDON_API = odoo.release.version
+
 ADDONS_PATTERN = "addons*"
 ADDONS_CUSTOM = "custom-addons"
 
@@ -296,10 +295,11 @@ class ConfigCommand(Command):
 
     def setup_env(self, fct=None):
         # setup pool
+        error = False
         with odoo.api.Environment.manage():
             if self.params.database:
-                registry = odoo.registry(self.params.database)
-                error = False
+                error = True
+                registry = odoo.registry(self.params.database)                
                 with registry.cursor() as cr:
                     uid = odoo.SUPERUSER_ID
                     ctx = odoo.api.Environment(cr, uid,
@@ -310,9 +310,8 @@ class ConfigCommand(Command):
                             fct(env)
                         else:
                             self.run_config_env(env)
-
-                    except Exception as e:
-                        error = True
+                        error = False
+                    except Exception as e:                        
                         if self.params.debug:
                             _logger.exception(e)
                         else:
@@ -321,8 +320,8 @@ class ConfigCommand(Command):
                     finally:
                         cr.rollback()
                 
-                if error and self.params.exit_error:
-                    sys.exit(1)
+        if error and self.params.exit_error:
+            sys.exit(-1)
 
 
 def update_database(database):
@@ -554,6 +553,17 @@ class Po_Import(Po_Export):
                                  default=True,
                                  help="Override existing translations")
 
+        self.parser.add_argument("--empty",
+                                 action="store_true",
+                                 default=False,
+                                 help="Create/Update empty translations")
+        
+        self.parser.add_argument("--verbose",
+                                 action="store_true",
+                                 default=False,
+                                 help="Verbose translation import")
+
+
     def run_config_env(self, env):
         # check module installed
         if not env["ir.module.module"].search(
@@ -561,21 +571,26 @@ class Po_Import(Po_Export):
             _logger.error("No module %s installed!" % self.params.module)
             return
 
+        if  self.params.lang:
+            _logger.warning("no lang")
+
         importFilename = os.path.join(self.langdir, self.langfile)
         if not os.path.exists(importFilename):
             _logger.error("File %s does not exist!" % importFilename)
             return
 
-        # import
-        context = {'overwrite': self.params.overwrite}
+        # import        
         if self.params.overwrite:
             _logger.info("Overwrite existing translations for %s/%s",
                          self.params.module, self.lang)
-
+       
         cr = env.cr
         odoo.tools.trans_load(cr,
-                              importFilename,
-                              self.lang)
+                              filename=importFilename,
+                              lang=self.lang,
+                              create_empty_translation=self.params.empty,
+                              verbose=self.params.verbose,
+                              overwrite=self.params.overwrite)
         cr.commit()
 
 
@@ -619,7 +634,8 @@ class Po_Cleanup(Po_Export):
 
 
 class Test(ConfigCommand):
-    """ Import *.po File """
+    """ Run Tests """
+    
     def __init__(self):
         super(Test, self).__init__()
         self.parser.add_argument(
@@ -655,9 +671,9 @@ class Test(ConfigCommand):
         )
 
     def run_config(self):
-        config["testing"] = True
         if self.params.test_download:
             config["test_download"] = self.params.test_download
+            
         # run with env
         self.setup_env()
 
@@ -710,6 +726,11 @@ class Test(ConfigCommand):
         return results
 
     def run_config_env(self, env):
+        # important to be here, that it not conflicts
+        # with tag parsing
+        config["test_enable"] = True
+
+
         module_name = self.params.module
         test_prefix = self.params.test_prefix
         test_case = self.params.test_case
@@ -1526,13 +1547,7 @@ class Serve(Command):
             help=
             "Specify the database name",
         )
-        parser.add_argument(           
-            "--log-splunk",           
-            default=None,
-            help="Specify Splunk http collector access data (e.g. https://<token>@<host>:<port>/<index>) for logging to Splunk"
-        )
-        parser.add_argument("--debug", action="store_true")
-                
+        parser.add_argument("--debug", action="store_true")        
         args, unknown = parser.parse_known_args(args=cmdargs)
 
         # configure paths
@@ -1545,40 +1560,9 @@ class Serve(Command):
             dir_workspace = os.path.abspath(
                 os.path.expanduser(os.path.expandvars(args.path)))
 
-        # configure splunk logger if it is defined
-
-        if args.log_splunk:
-            from splunk_handler import SplunkHandler
-            from pythonjsonlogger import jsonlogger
-
-            splunk_url = urlparse(args.log_splunk) 
-            splunk_logger = SplunkHandler(
-                host=splunk_url.hostname,
-                port=splunk_url.port,
-                token=splunk_url.username,
-                index=splunk_url.path[1:],
-                protocol=splunk_url.scheme,
-                sourcetype='json'
-            )
-
-            class CustomJsonFormatter(jsonlogger.JsonFormatter):
-                def add_fields(self, log_record, record, message_dict):
-                    super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
-                    if not log_record.get('timestamp'):
-                        # this doesn't use record.created, so it is slightly off
-                        now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-                        log_record['timestamp'] = now
-                    if log_record.get('level'):
-                        log_record['level'] = log_record['level'].upper()
-                    else:
-                        log_record['level'] = record.levelname
-
-            json_formatter = CustomJsonFormatter('%(timestamp)s %(level)s %(name)s %(message)s')
-            splunk_logger.setFormatter(json_formatter)
-            logging.getLogger().addHandler(splunk_logger)
-            
-
+        
         # get addons paths
+        
         if "--addons-path" not in cmdargs:
             addon_pattern = [
                 f"{dir_server}/addons",
@@ -1612,7 +1596,7 @@ class Serve(Command):
 
         # Remove --path /-p options from the command arguments
         def to_remove(i, l):
-            return l[i].startswith("--log-splunk") or [i] == "--debug" or l[i] == "-p" or l[i].startswith(
+            return l[i] == "--debug" or l[i] == "-p" or l[i].startswith(
                 "--path") or (i > 0 and l[i - 1] in ["-p", "--path"])
 
         cmdargs = [
@@ -1620,7 +1604,3 @@ class Serve(Command):
         ]
         main(cmdargs)
 
-
-def die(message, code=1):
-    print >> sys.stderr, message
-    sys.exit(code)
