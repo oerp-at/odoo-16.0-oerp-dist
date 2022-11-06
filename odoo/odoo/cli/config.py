@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*--
 # © 2007 Funkring.net (Martin Reisenhofer <martin.reisenhofer@funkring.net>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
@@ -37,10 +36,10 @@ from odoo.tools.translate import (PoFileReader, PoFileWriter,
 from . import Command
 from .server import main
 
+
 _logger = logging.getLogger('config')
 
 ADDON_API = odoo.release.version
-
 ADDONS_PATTERN = "addons*"
 ADDONS_CUSTOM = "custom-addons"
 
@@ -59,15 +58,6 @@ class OdooTestRunner(object):
         run = result.testsRun
         _logger.info("Ran %d test%s in %.3fs", run, run != 1 and "s" or "", time_taken)
         return result
-
-
-def get_python_lib():
-    version = sys.version.split(".")
-    if len(version) >= 2:
-        return "python%s.%s" % (version[0], version[1])
-    elif len(version) == 1:
-        return "python%s.%s" % version[0]
-    return "python%s" % version
 
 
 def required_or_default(name, h):
@@ -334,7 +324,7 @@ def update_database(database):
                 cr.execute("SELECT matviewname FROM pg_matviews")
 
                 for (matview, ) in cr.fetchall():
-                    _logger.info("REFRESH MATERIALIZED VIEW %s ..." % matview)
+                    _logger.info("REFRESH MATERIALIZED VIEW %s ...", matview)
                     cr.execute("REFRESH MATERIALIZED VIEW %s" % matview)
                     cr.commit()
 
@@ -405,7 +395,7 @@ class Update(ConfigCommand):
                 )
                 return
 
-            _logger.info("Create thread pool (%s) for update" %
+            _logger.info("Create thread pool (%s) for update",
                          self.params.threads)
 
             pool = Pool(processes=self.params.threads)
@@ -489,7 +479,7 @@ class Po_Export(ConfigCommand):
         # check path
         self.modpath = odoo.modules.get_module_path(self.params.module)
         if not self.modpath:
-            _logger.error("No module %s not found in path!" %
+            _logger.error("No module %s not found in path!",
                           self.params.module)
             return
 
@@ -498,7 +488,7 @@ class Po_Export(ConfigCommand):
         self.langfile = self.lang.split("_")[0] + ".po"
         self.langdir = os.path.join(self.modpath, "i18n")
         if not os.path.exists(self.langdir):
-            _logger.warning("Created language directory %s" % self.langdir)
+            _logger.warning("Created language directory %s", self.langdir)
             os.mkdir(self.langdir)
 
         # run with env
@@ -515,7 +505,7 @@ class Po_Export(ConfigCommand):
         # check module installed
         if not env["ir.module.module"].search(
             [("state", "=", "installed"), ("name", "=", self.params.module)]):
-            _logger.error("No module %s installed!" % self.params.module)
+            _logger.error("No module %s installed!", self.params.module)
             return
 
         exportFileName = os.path.join(self.langdir, self.langfile)
@@ -523,7 +513,7 @@ class Po_Export(ConfigCommand):
             ignore = None
             ignore_filename = "%s.ignore" % exportFileName
             if os.path.exists(ignore_filename):
-                _logger.info("Load ignore file %s" % ignore_filename)
+                _logger.info("Load ignore file %s", ignore_filename)
                 ignore = set()
                 with misc.file_open(ignore_filename, mode="rb") as fileobj:
                     reader = PoFileReader(fileobj)
@@ -552,11 +542,6 @@ class Po_Import(Po_Export):
                                  action="store_true",
                                  default=True,
                                  help="Override existing translations")
-
-        self.parser.add_argument("--empty",
-                                 action="store_true",
-                                 default=False,
-                                 help="Create/Update empty translations")
         
         self.parser.add_argument("--verbose",
                                  action="store_true",
@@ -568,7 +553,7 @@ class Po_Import(Po_Export):
         # check module installed
         if not env["ir.module.module"].search(
             [("state", "=", "installed"), ("name", "=", self.params.module)]):
-            _logger.error("No module %s installed!" % self.params.module)
+            _logger.error("No module %s installed!", self.params.module)
             return
 
         if  self.params.lang:
@@ -576,7 +561,7 @@ class Po_Import(Po_Export):
 
         importFilename = os.path.join(self.langdir, self.langfile)
         if not os.path.exists(importFilename):
-            _logger.error("File %s does not exist!" % importFilename)
+            _logger.error("File %s does not exist!", importFilename)
             return
 
         # import        
@@ -584,11 +569,10 @@ class Po_Import(Po_Export):
             _logger.info("Overwrite existing translations for %s/%s",
                          self.params.module, self.lang)
        
-        cr = env.cr
+        cr = env.cr   
         odoo.tools.trans_load(cr,
                               filename=importFilename,
-                              lang=self.lang,
-                              create_empty_translation=self.params.empty,
+                              lang=self.lang,                     
                               verbose=self.params.verbose,
                               overwrite=self.params.overwrite)
         cr.commit()
@@ -603,12 +587,12 @@ class Po_Cleanup(Po_Export):
         # check module installed
         if not self.env["ir.module.module"].search(
             [("state", "=", "installed"), ("name", "=", self.params.module)]):
-            _logger.error("No module %s installed!" % self.params.module)
+            _logger.error("No module %s installed!", self.params.module)
             return
 
         import_filename = os.path.join(self.langdir, self.langfile)
         if not os.path.exists(import_filename):
-            _logger.error("File %s does not exist!" % import_filename)
+            _logger.error("File %s does not exist!", import_filename)
             return
 
         cr = env.cr
@@ -755,7 +739,7 @@ class Test(ConfigCommand):
                 if not addons_dir_pattern.startswith('/'):
                     addons_dir_pattern = f"{dir_workspace}/{addons_dir_pattern}"
                 for dir in glob.glob(addons_dir_pattern):
-                    if os.path.isdir(dir) and isAddon(dir):
+                    if os.path.isdir(dir) and is_addon(dir):
                         allowed_modules.add(os.path.basename(dir))
                         
             modules = [m for m in modules if m in allowed_modules]
@@ -1156,25 +1140,24 @@ class CleanUp(ConfigCommand):
 ###############################################################################
 
 
-def getDirs(inDir):
+def get_dirs(in_dir):
     res = []
-    for dirName in os.listdir(inDir):
-        if not dirName.startswith("."):
-            if os.path.isdir(os.path.join(inDir, dirName)):
-                res.append(dirName)
-
+    for dir_name in os.listdir(in_dir):
+        if not dir_name.startswith("."):
+            if os.path.isdir(os.path.join(in_dir, dir_name)):
+                res.append(dir_name)
     return res
 
 
-def listDir(inDir):
+def list_dir(in_dir):
     res = []
-    for item in os.listdir(inDir):
+    for item in os.listdir(in_dir):
         if not item.startswith("."):
             res.append(item)
     return res
 
 
-def findFile(directory, pattern):
+def find_file(directory, pattern):
     for root, dirs, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
@@ -1182,23 +1165,23 @@ def findFile(directory, pattern):
                 yield filename
 
 
-def cleanupPython(directory):
-    for fileName in findFile(directory, "*.pyc"):
-        os.remove(fileName)
+def cleanup_python(directory):
+    for file_name in find_file(directory, "*.pyc"):
+        os.remove(file_name)
 
 
-def linkFile(src, dst):
+def link_file(src, dst):
     if os.path.exists(dst):
         if os.path.islink(dst):
             os.remove(dst)
     os.symlink(src, dst)
 
 
-def linkDirectoryEntries(src, dst, ignore=None, names=None):
+def link_directory_entries(src, dst, ignore=None, names=None):
     links = set()
 
     # remove old links
-    for name in listDir(dst):
+    for name in list_dir(dst):
         if ignore and name in ignore:
             continue
         if names and not name in names:
@@ -1208,7 +1191,7 @@ def linkDirectoryEntries(src, dst, ignore=None, names=None):
             os.remove(file_path)
 
     # set new links
-    for name in listDir(src):
+    for name in list_dir(src):
         if ignore and name in ignore:
             continue
         if names and not name in names:
@@ -1223,7 +1206,7 @@ def linkDirectoryEntries(src, dst, ignore=None, names=None):
     return links
 
 
-def isAddon(addon_path):
+def is_addon(addon_path):
     if not addon_path or not os.path.exists(addon_path) or addon_path.endswith('.pyc'):
         return False
     for manifest_name in MANIFEST_NAMES:       
@@ -1298,27 +1281,27 @@ class Assemble(Command):
             #        ]
         }
 
-        def getAddonsSet():
+        def get_addons_set():
             addons = set()
-            for name in getDirs(dir_enabled_addons):
+            for name in get_dirs(dir_enabled_addons):
                 addons.add(name)
             return addons
 
-        def setupAddons(only_links=False):
+        def setup_addons(only_links=False):
             dir_odoo = os.path.join(dir_server, "odoo")
             dir_odoo_addons = os.path.join(dir_odoo, "addons")
-            old_addons = getAddonsSet()
+            old_addons = get_addons_set()
 
             # setup odoo libs
 
-            linkDirectoryEntries(dir_odoo, lib_path_odoo, ignore="addons")
-            linked_base_entries = linkDirectoryEntries(dir_odoo_addons,
+            link_directory_entries(dir_odoo, lib_path_odoo, ignore="addons")
+            linked_base_entries = link_directory_entries(dir_odoo_addons,
                                                      lib_path_addons)
 
             # setup odoo bin
 
             odoo_bin = os.path.join(dir_server, "odoo-bin")
-            linkFile(odoo_bin, os.path.join(bin_path, "odoo-bin"))
+            link_file(odoo_bin, os.path.join(bin_path, "odoo-bin"))
 
             # setup addons
 
@@ -1337,7 +1320,7 @@ class Assemble(Command):
 
             if not only_links:
                 _logger.info("Cleanup all *.pyc Files")
-                cleanupPython(dir_workspace)
+                cleanup_python(dir_workspace)
 
             if not os.path.exists(dir_enabled_addons):
                 _logger.info("Create directory %s" % str(dir_enabled_addons))
@@ -1370,14 +1353,14 @@ class Assemble(Command):
                             addon_include_list = includeAddons.get(
                                 package_name, None)
                             # process addons
-                            for cur_addon in listDir(cur_addon_package_dir):
+                            for cur_addon in list_dir(cur_addon_package_dir):
                                 if not cur_addon in ignore_addons and (
                                         addon_include_list is None
                                         or cur_addon in addon_include_list):
                                     cur_addon_path = os.path.join(
                                         cur_addon_package_dir, cur_addon)
 
-                                    if isAddon(cur_addon_path):
+                                    if is_addon(cur_addon_path):
                                         dstPath = os.path.join(dir_enabled_addons, cur_addon)
                                         if not os.path.exists(dstPath):
                                             # log.info("Create addon link " + str(dstPath) + " from " + str(cur_addon_path))
@@ -1388,7 +1371,7 @@ class Assemble(Command):
                         # log.info("processed twice: " + cur_addon_package_dir)
                         pass
 
-            installed_addons = getAddonsSet()
+            installed_addons = get_addons_set()
             addons_removed = old_addons - installed_addons
             addons_added = installed_addons - old_addons
 
@@ -1411,7 +1394,7 @@ class Assemble(Command):
             _logger.info("Added links: %s" % len(addons_added))
             _logger.info("Finished!")
 
-        setupAddons(only_links=not params.cleanup)
+        setup_addons(only_links=not params.cleanup)
 
 
 
