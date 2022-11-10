@@ -105,7 +105,8 @@ def required_or_default(name, h):
     return d
 
 
-class ConfigCommand(Command):
+class ConfigCommand():
+         
     """ Basic config command """
     def __init__(self):
         defaultLang = locale.getdefaultlocale()[0]
@@ -333,7 +334,7 @@ def update_database(database):
         pass
 
 
-class Update(ConfigCommand):
+class Update(ConfigCommand, Command):
     """ Update Module/All """
     def __init__(self):
         super(Update, self).__init__()
@@ -405,7 +406,7 @@ class Update(ConfigCommand):
             update_database(self.params.database)
 
 
-class PoIgnoreFileWriter(PoFileWriter):
+class PoIgnoreFileWriter(PoFileWriter, Command):
     def __init__(self, target, modules, lang, ignore):
         super(PoIgnoreFileWriter, self).__init__(target, lang)
         self.modules = modules
@@ -469,7 +470,7 @@ class PoIgnoreFileWriter(PoFileWriter):
         self.buffer.write(str(self.po).encode())
 
 
-class Po_Export(ConfigCommand):
+class Po_Export(ConfigCommand, Command):
     """ Export *.po File """
     def run_config(self):
         # check module
@@ -534,7 +535,7 @@ class Po_Export(ConfigCommand):
                               env.cr, ignore)
 
 
-class Po_Import(Po_Export):
+class Po_Import(Po_Export, Command):
     """ Import *.po File """
     def __init__(self):
         super(Po_Import, self).__init__()
@@ -578,7 +579,7 @@ class Po_Import(Po_Export):
         cr.commit()
 
 
-class Po_Cleanup(Po_Export):
+class Po_Cleanup(Po_Export, Command):
     """ Import *.po File """
     def __init__(self):
         super(Po_Cleanup, self).__init__()
@@ -617,7 +618,7 @@ class Po_Cleanup(Po_Export):
         cr.commit()
 
 
-class Test(ConfigCommand):
+class Test(ConfigCommand, Command):
     """ Run Tests """
     
     def __init__(self):
@@ -778,7 +779,7 @@ class Test(ConfigCommand):
                 raise Exception(f'{len(failed)}/{len(results)} Test(s) failed!')
 
 
-class CleanUp(ConfigCommand):
+class CleanUp(ConfigCommand, Command):
     """ CleanUp Database """
     def __init__(self):
         super(CleanUp, self).__init__()
@@ -1403,7 +1404,7 @@ class Assemble(Command):
 ###############################################################################
 
 
-class Install(ConfigCommand):
+class Install(ConfigCommand, Command):
 
     def run_config(self):
         self.setup_env()
@@ -1424,7 +1425,7 @@ class Install(ConfigCommand):
         env.cr.commit()
 
 
-class UnInstall(ConfigCommand):
+class UnInstall(ConfigCommand, Command):
 
     def run_config(self):
         self.setup_env()
@@ -1445,7 +1446,7 @@ class UnInstall(ConfigCommand):
         env.cr.commit()
 
 
-class Cancel(ConfigCommand):
+class Cancel(ConfigCommand, Command):
 
     def run_config(self):
         self.setup_env()
@@ -1466,7 +1467,7 @@ class Cancel(ConfigCommand):
         env.cr.commit()
 
 
-class Upgrade(ConfigCommand):
+class Upgrade(ConfigCommand, Command):
 
     def run_config(self):
         self.setup_env()
@@ -1487,7 +1488,7 @@ class Upgrade(ConfigCommand):
         env.cr.commit()
 
 
-class UpdateList(ConfigCommand):
+class UpdateList(ConfigCommand, Command):
 
     def run_config(self):
         self.setup_env()
