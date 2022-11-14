@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+     <record model="ir.ui.view" id="first_try_form_view">
+            <field name="model">first_try.key_value</field>
+            <field name="arch" type="xml">
+                <form string="Log">
+                <sheet>
+                    <group name="header_values" string="Values">
+                        <field name="name" />
+                        <field name="value" />
+                    </group>
+                </sheet>
+                </form>
+            </field>
+        </record>
+     <record model="ir.ui.view" id="first_try_tree_view">
+            <field name="model">first_try.key_value</field>
+            <field name="arch" type="xml">
+                <tree string="Log">
+                        <field name="name" />
+                        <field name="value" />
+                </tree>
+            </field>
+        </record>
+    <record id="action_open_first_try" model="ir.actions.act_window">
+        <field name="name">First Try</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">first_try.key_value</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'default_is_company': True}</field>
+         <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+          </p>
+        </field>
+    </record>
+
+    <menuitem id="first_try_root" name="Main Menu First try" sequence="2">
+        <menuitem id="first_try_action_menu" name="Menu First try"
+     sequence="2" action="action_open_first_try"/>
+    </menuitem>
+</odoo>
