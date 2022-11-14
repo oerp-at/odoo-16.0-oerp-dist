@@ -15,8 +15,6 @@ class FirstTryTest(TransactionCase):
         create_record = model.create([{'name':'test123test','value':'123'},
                                       {'name':'test567test','value':'1234567'},
                                       {'name':'test89test','value':'123456789'}])
-        print (create_record,'#'*23)
-
 
         self.assertEqual(len(create_record), 3,
                               "3 records should have been created ")
